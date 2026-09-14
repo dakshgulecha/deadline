@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Deadline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark"></span><span>Deadline</span></div>
+        <div class="topbar-center" id="today-label"></div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="toggle-notes" aria-label="Hide notes" title="Hide notes">◧</button>
+          <button class="add-deadline-button" id="show-deadline-form">Add deadline <span>+</span></button>
+        </div>
+      </header>
+
+      <section class="workspace" id="workspace">
+        <section class="tracker-panel" aria-label="Deadline tracker">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">YOUR DEADLINES</p>
+              <h1>What needs your attention.</h1>
+            </div>
+            <span class="item-count" id="deadline-count"></span>
+          </div>
+
+          <div class="deadline-form" id="deadline-form" hidden>
+            <div class="form-grid">
+              <label>Title<input id="new-deadline-title" type="text" placeholder="e.g. UCAS application" /></label>
+              <label>Date<input id="new-deadline-date" type="date" /></label>
+              <label>Institution<input id="new-deadline-institution" type="text" placeholder="Institution or board" /></label>
+              <label>Type
+                <select id="new-deadline-category">
+                  <option value="registration">Registration deadline</option>
+                  <option value="testRegistration">Test registration deadline</option>
+                  <option value="application">Application deadline</option>
+                  <option value="test">Test date</option>
+                </select>
+              </label>
+              <label class="wide">Details<textarea id="new-deadline-details" placeholder="What needs to happen?"></textarea></label>
+              <label class="wide">Link<input id="new-deadline-link" type="url" placeholder="https://"></label>
+              <label class="wide">Notes<textarea id="new-deadline-notes" placeholder="Anything useful to remember?"></textarea></label>
+            </div>
+            <div class="form-actions"><button class="text-button" id="cancel-deadline">Cancel</button><button class="primary-button" id="save-deadline">Save deadline</button></div>
+          </div>
+
+          <div class="deadline-list" id="deadline-list"></div>
+        </section>
+
+        <div class="resize-handle" id="resize-handle" role="separator" aria-label="Resize tracker and notes" aria-orientation="vertical" aria-valuemin="38" aria-valuemax="68" aria-valuenow="56" tabindex="0"></div>
+
+        <aside class="notes-panel" aria-label="Notes workspace">
+          <div class="notes-heading">
+            <div>
+              <p class="eyebrow">PERSONAL WORKSPACE</p>
+              <h2>Notes</h2>
+            </div>
+            <span class="save-status" id="save-status">Saved</span>
+          </div>
+          <div class="notes-workspace">
+            <nav class="note-list" id="note-list" aria-label="Your notes"></nav>
+            <section class="note-editor" id="note-editor">
+              <div class="editor-empty" id="editor-empty">Choose a note to begin.</div>
+              <div class="editor-content" id="editor-content" hidden>
+                <input class="note-title-input" id="note-title" aria-label="Note title" placeholder="Untitled note" />
+                <div class="editor-meta"><span id="note-date"></span><button class="delete-note" id="delete-note">Delete</button></div>
+                <div class="editor-tools" role="toolbar" aria-label="Note formatting">
+                  <button type="button" class="format-button" id="bullet-list" title="Bulleted list" aria-label="Bulleted list">• List</button>
+                  <button type="button" class="format-button" id="checklist" title="Checklist" aria-label="Checklist">☐ Check</button>
+                </div>
+                <div id="note-body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note body" data-placeholder="Start writing…"></div>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </section>
+    </main>
+    <template id="deadline-template">
+      <article class="deadline-item">
+        <button class="deadline-row" type="button">
+          <span class="completion" aria-hidden="true"></span>
+          <time class="deadline-date"></time>
+          <span class="deadline-main"><strong></strong><small></small></span>
+          <span class="deadline-type"></span>
+          <span class="countdown"></span>
+          <span class="chevron">⌄</span>
+        </button>
+        <div class="deadline-details" hidden></div>
+      </article>
+    </template>
+    <script src="app.js"></script>
+  </body>
+</html>
