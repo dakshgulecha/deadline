@@ -106,7 +106,10 @@ function dateGroup(value) { const days = daysAway(value); if (days === 0) return
 function notePreview(note) {
   const preview = document.createElement("div");
   preview.innerHTML = note.body;
-  return (preview.textContent || "").replace(/\s+/g, " ").trim() || "Empty note";
+  preview.querySelectorAll("br").forEach(br => br.replaceWith("\n"));
+  preview.querySelectorAll("div, p, li").forEach(el => el.append("\n"));
+  const lines = (preview.textContent || "").split("\n").map(line => line.replace(/\s+/g, " ").trim());
+  return lines.find(line => line.length > 0) || "Empty note";
 }
 function formatUpdated(value) { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
 
@@ -319,6 +322,45 @@ document.querySelector("#toggle-notes").addEventListener("click", () => {
 document.querySelector("#note-title").addEventListener("input", event => updateActiveNote("title", event.target.value));
 document.querySelector("#note-body").addEventListener("input", event => updateActiveNote("body", event.currentTarget.innerHTML));
 document.querySelector("#note-body").addEventListener("change", event => { if (event.target.matches('input[type="checkbox"]')) updateActiveNote("body", event.currentTarget.innerHTML); });
+document.querySelector("#note-body").addEventListener("keydown", event => {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return;
+  const range = selection.getRangeAt(0);
+  const startNode = range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement;
+  const li = startNode?.closest("li");
+  const span = li?.querySelector(":scope > span");
+  if (!li || !li.closest("ul.checklist") || !span) return;
+  event.preventDefault();
+
+  const beforeRange = document.createRange();
+  beforeRange.selectNodeContents(span);
+  beforeRange.setEnd(range.startContainer, range.startOffset);
+  const afterRange = document.createRange();
+  afterRange.selectNodeContents(span);
+  afterRange.setStart(range.startContainer, range.startOffset);
+  const beforeText = beforeRange.toString();
+  const afterText = afterRange.toString();
+
+  span.textContent = beforeText;
+
+  const newItem = document.createElement("li");
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  const newSpan = document.createElement("span");
+  newSpan.textContent = afterText;
+  newItem.append(checkbox, newSpan);
+  li.after(newItem);
+
+  const newRange = document.createRange();
+  if (newSpan.firstChild) newRange.setStart(newSpan.firstChild, 0);
+  else newRange.setStart(newSpan, 0);
+  newRange.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(newRange);
+
+  updateActiveNote("body", document.querySelector("#note-body").innerHTML);
+});
 document.querySelector("#bullet-list").addEventListener("mousedown", event => event.preventDefault());
 document.querySelector("#bullet-list").addEventListener("click", () => { const editor = document.querySelector("#note-body"); editor.focus(); document.execCommand("insertUnorderedList"); updateActiveNote("body", editor.innerHTML); });
 document.querySelector("#checklist").addEventListener("mousedown", event => event.preventDefault());
