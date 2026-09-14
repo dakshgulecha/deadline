@@ -256,10 +256,11 @@ function toEditorHtml(value) {
 function insertChecklist() {
   const editor = document.querySelector("#note-body");
   editor.focus();
+  document.execCommand("insertUnorderedList");
   const anchor = window.getSelection()?.anchorNode;
   const anchorElement = anchor?.nodeType === Node.ELEMENT_NODE ? anchor : anchor?.parentElement;
-  if (anchorElement?.closest("ul:not(.checklist)")) document.execCommand("insertUnorderedList");
-  document.execCommand("insertHTML", false, '<ul class="checklist"><li><input type="checkbox"><span>Checklist item</span></li></ul>');
+  const list = anchorElement?.closest("ul");
+  if (list) list.classList.toggle("checklist");
   updateActiveNote("body", editor.innerHTML);
 }
 function deleteActiveNote() {
@@ -321,44 +322,13 @@ document.querySelector("#toggle-notes").addEventListener("click", () => {
 });
 document.querySelector("#note-title").addEventListener("input", event => updateActiveNote("title", event.target.value));
 document.querySelector("#note-body").addEventListener("input", event => updateActiveNote("body", event.currentTarget.innerHTML));
-document.querySelector("#note-body").addEventListener("change", event => { if (event.target.matches('input[type="checkbox"]')) updateActiveNote("body", event.currentTarget.innerHTML); });
-document.querySelector("#note-body").addEventListener("keydown", event => {
-  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
-  const selection = window.getSelection();
-  if (!selection || !selection.rangeCount) return;
-  const range = selection.getRangeAt(0);
-  const startNode = range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement;
-  const li = startNode?.closest("li");
-  const span = li?.querySelector(":scope > span");
-  if (!li || !li.closest("ul.checklist") || !span) return;
+document.querySelector("#note-body").addEventListener("click", event => {
+  const li = event.target.closest(".checklist li");
+  if (!li) return;
+  const rect = li.getBoundingClientRect();
+  if (event.clientX - rect.left > 20) return;
   event.preventDefault();
-
-  const beforeRange = document.createRange();
-  beforeRange.selectNodeContents(span);
-  beforeRange.setEnd(range.startContainer, range.startOffset);
-  const afterRange = document.createRange();
-  afterRange.selectNodeContents(span);
-  afterRange.setStart(range.startContainer, range.startOffset);
-  const beforeText = beforeRange.toString();
-  const afterText = afterRange.toString();
-
-  span.textContent = beforeText;
-
-  const newItem = document.createElement("li");
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  const newSpan = document.createElement("span");
-  newSpan.textContent = afterText;
-  newItem.append(checkbox, newSpan);
-  li.after(newItem);
-
-  const newRange = document.createRange();
-  if (newSpan.firstChild) newRange.setStart(newSpan.firstChild, 0);
-  else newRange.setStart(newSpan, 0);
-  newRange.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(newRange);
-
+  li.classList.toggle("checked");
   updateActiveNote("body", document.querySelector("#note-body").innerHTML);
 });
 document.querySelector("#bullet-list").addEventListener("mousedown", event => event.preventDefault());
