@@ -324,7 +324,6 @@ document.querySelector("#bullet-list").addEventListener("click", () => { const e
 document.querySelector("#checklist").addEventListener("mousedown", event => event.preventDefault());
 document.querySelector("#checklist").addEventListener("click", insertChecklist);
 document.querySelector("#delete-note").addEventListener("click", deleteActiveNote);
-document.addEventListener("keydown", event => { if (event.key.toLowerCase() === "n" && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) { event.preventDefault(); createNote(); } });
 
 const resizeHandle = document.querySelector("#resize-handle");
 const storedSplit = Number.parseFloat(localStorage.getItem("deadline-split-v1"));
