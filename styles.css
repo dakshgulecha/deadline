@@ -132,10 +132,11 @@ h2 { font-size: 21px; line-height: 1; }
 #note-body:empty::before { content: attr(data-placeholder); color: #b0b0b4; pointer-events: none; }
 #note-body ul { margin: 6px 0; padding-left: 19px; }
 #note-body li { padding-left: 2px; }
-#note-body .checklist { list-style: none; padding-left: 0; }
-#note-body .checklist li { display: flex; gap: 8px; align-items: baseline; }
-#note-body .checklist input { accent-color: var(--ink); }
-#note-body .checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+#note-body .checklist { list-style: none; padding-left: 19px; }
+#note-body .checklist li { position: relative; padding-left: 20px; }
+#note-body .checklist li::before { content: ""; position: absolute; left: -1px; top: 5px; width: 13px; height: 13px; border: 1px solid #c8c8cc; background: var(--paper); cursor: pointer; }
+#note-body .checklist li.checked::before { border-color: var(--ink); background: var(--ink); box-shadow: inset 0 0 0 3px var(--paper); }
+#note-body .checklist li.checked { color: var(--muted); text-decoration: line-through; }
 @keyframes reveal { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
 
