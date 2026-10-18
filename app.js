@@ -116,7 +116,8 @@ function formatUpdated(value) { return new Intl.DateTimeFormat(undefined, { mont
 function renderDeadlines() {
   const list = document.querySelector("#deadline-list");
   const deadlines = [...state.deadlines].sort((a, b) => a.date.localeCompare(b.date));
-  document.querySelector("#deadline-count").textContent = `${deadlines.filter(d => !d.complete).length} open`;
+  updateDeadlineCount();
+  armedItem = null;
   list.innerHTML = "";
   if (!deadlines.length) {
     list.innerHTML = '<div class="empty-list">No deadlines yet. Add one when you are ready.</div>';
@@ -158,6 +159,8 @@ function renderDeadlines() {
       item.classList.toggle("expanded", open);
     });
     fragment.querySelector(".completion").addEventListener("click", event => { event.stopPropagation(); toggleComplete(deadline.id); });
+    fragment.querySelector(".swipe-delete").addEventListener("click", () => deleteDeadline(deadline.id, item));
+    fragment.querySelector(".row-delete").addEventListener("click", () => deleteDeadline(deadline.id, item));
     list.append(fragment);
   }
 }
@@ -203,7 +206,51 @@ function renderDeadlineDeleteConfirm(details, deadline) {
 function escapeHtml(value) { const node = document.createElement("div"); node.textContent = value; return node.innerHTML.replace(/\n/g, "<br>"); }
 function escapePlain(value) { const node = document.createElement("div"); node.textContent = value; return node.innerHTML; }
 function escapeAttr(value) { return String(value).replace(/"/g, "&quot;"); }
-function toggleComplete(id) { const item = state.deadlines.find(d => d.id === id); item.complete = !item.complete; persist(); renderDeadlines(); }
+let armedItem = null;
+function updateDeadlineCount() { document.querySelector("#deadline-count").textContent = `${state.deadlines.filter(d => !d.complete).length} open`; }
+function arm(item) { armedItem = item; item.classList.add("is-armed"); }
+function disarm() { armedItem?.classList.remove("is-armed"); armedItem = null; }
+function toggleComplete(id) {
+  const deadline = state.deadlines.find(d => d.id === id);
+  const item = document.querySelector(`.deadline-item[data-id="${CSS.escape(id)}"]`);
+  disarm();
+  deadline.complete = !deadline.complete;
+  persist();
+  updateDeadlineCount();
+  item.classList.toggle("is-complete", deadline.complete);
+  if (deadline.complete) arm(item);
+}
+function deleteDeadline(id, item) {
+  disarm();
+  state.deadlines = state.deadlines.filter(d => d.id !== id);
+  persist();
+  item.style.height = `${item.offsetHeight}px`;
+  item.classList.add("is-removing");
+  item.getBoundingClientRect();
+  item.style.height = "0px";
+  window.setTimeout(renderDeadlines, 240);
+}
+document.addEventListener("pointerdown", event => { if (armedItem && !event.target.closest(".swipe-delete")) disarm(); }, true);
+document.addEventListener("keydown", event => { if (event.key === "Escape") disarm(); });
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  const toggle = document.querySelector("#toggle-theme");
+  const label = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  root.dataset.theme = theme;
+  toggle.setAttribute("aria-label", label);
+  toggle.setAttribute("title", label);
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", getComputedStyle(root).getPropertyValue("--paper").trim());
+}
+function switchTheme() {
+  const root = document.documentElement;
+  const next = root.dataset.theme === "dark" ? "light" : "dark";
+  root.classList.add("theme-switching");
+  applyTheme(next);
+  try { localStorage.setItem("deadline-theme", next); } catch {}
+  getComputedStyle(root).opacity;
+  requestAnimationFrame(() => root.classList.remove("theme-switching"));
+}
 
 function renderNotes() {
   const list = document.querySelector("#note-list");
@@ -310,6 +357,7 @@ function setSplitFromPointer(clientX) {
 document.querySelector("#show-deadline-form").addEventListener("click", () => { const form = document.querySelector("#deadline-form"); form.hidden = !form.hidden; if (!form.hidden) document.querySelector("#new-deadline-title").focus(); });
 document.querySelector("#cancel-deadline").addEventListener("click", () => { document.querySelector("#deadline-form").hidden = true; });
 document.querySelector("#save-deadline").addEventListener("click", addDeadline);
+document.querySelector("#toggle-theme").addEventListener("click", switchTheme);
 document.querySelector("#toggle-notes").addEventListener("click", () => {
   const workspace = document.querySelector("#workspace");
   const notesPanel = document.querySelector(".notes-panel");
@@ -354,6 +402,7 @@ resizeHandle.addEventListener("keydown", event => {
   setSplit(currentSplit() + (event.key === 'ArrowLeft' ? -2 : 2));
 });
 
+applyTheme(document.documentElement.dataset.theme || "light");
 setTodayLabel();
 renderDeadlines();
 renderNotes();
