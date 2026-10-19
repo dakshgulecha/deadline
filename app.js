@@ -318,6 +318,34 @@ function deleteActiveNote() {
 }
 
 function setTodayLabel() { document.querySelector("#today-label").textContent = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" }).format(new Date()); }
+function refreshCountdowns() {
+  document.querySelectorAll(".countdown").forEach(el => {
+    const item = el.closest(".deadline-item");
+    if (!item) return;
+    const deadline = state.deadlines.find(d => d.id === item.dataset.id);
+    if (!deadline) return;
+    const days = daysAway(deadline.date);
+    el.textContent = countdownText(days);
+    el.title = spokenCountdown(days);
+    el.className = `countdown ${urgencyClass(days)}`;
+  });
+  const dateLabels = document.querySelectorAll(".date-group-label");
+  const deadlines = [...state.deadlines].sort((a, b) => a.date.localeCompare(b.date));
+  const groupMap = new Map();
+  for (const deadline of deadlines) {
+    const group = dateGroup(deadline.date);
+    if (!groupMap.has(group)) groupMap.set(group, []);
+    groupMap.get(group).push(deadline.id);
+  }
+  let idx = 0;
+  for (const [groupLabel, ids] of groupMap) {
+    if (dateLabels[idx] && dateLabels[idx].textContent !== groupLabel) {
+      dateLabels[idx].textContent = groupLabel;
+    }
+    idx++;
+  }
+  setTodayLabel();
+}
 function addDeadline() {
   const title = document.querySelector("#new-deadline-title").value.trim();
   const date = document.querySelector("#new-deadline-date").value;
@@ -408,3 +436,4 @@ renderDeadlines();
 renderNotes();
 renderEditor();
 startCloudSync();
+window.setInterval(refreshCountdowns, 60000);
